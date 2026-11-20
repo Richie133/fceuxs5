@@ -1,6 +1,6 @@
-# Builds fceuxs5 from source and publishes the GitHub release a tag names.
+# Builds fceuxs5 from source and publishes a GitHub release.
 # Push a tag named after the app's contentVersion (sce_sys/param.json), e.g. 01.000.000, or run it by hand
-# (Actions > release > Run workflow) with that tag.
+# (Actions > release > Run workflow) with that version: the tag is then created on the commit it builds.
 name: release
 
 on:
@@ -21,8 +21,6 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
 
       - name: Toolchain (clang / lld 18)
         run: |
@@ -52,4 +50,4 @@ jobs:
         run: |
           ls -l ps5/build/dist
           gh release create "$TAG" ps5/build/dist/*-PPSA*.zip ps5/build/dist/fceuxs5-v*[0-9].elf \
-            --title "fceuxs5 $TAG" --notes-file .github/release-notes.md --verify-tag
+            --title "fceuxs5 $TAG" --notes-file .github/release-notes.md --target "$GITHUB_SHA"
