@@ -1,0 +1,5 @@
+ps5/build/
+ps5/proto/native/build/
+*.o
+*.pyc
+__pycache__/

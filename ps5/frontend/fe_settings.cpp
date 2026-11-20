@@ -1,0 +1,202 @@
+// fceuxs5 frontend: settings file.
+// fceuxs5: adds the interface, intro, music, upscaler and ROM-hack settings.
+// SPDX-License-Identifier: MIT
+
+#include "fe_settings.h"
+
+#include "OrbisPaths.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <unistd.h>
+
+namespace fe
+{
+namespace
+{
+std::string IniPath()
+{
+	return OrbisRoot() + "/fceuxs5.ini";
+}
+
+int Clamp(int v, int lo, int hi)
+{
+	return v < lo ? lo : (v > hi ? hi : v);
+}
+
+const char* const kButtonKeys[Settings::kButtons] = {"btn_a", "btn_b", "btn_turbo_a", "btn_turbo_b", "btn_start",
+	"btn_select", "btn_disk_side", "btn_disk_insert", "btn_coin"};
+constexpr int kPs5ButtonChoices = 9; // emu::kPs5ButtonCount
+constexpr int kShaderCount = 12; // ps5crt::Shader::Count
+} // namespace
+
+constexpr int Settings::kDefaultButtons[Settings::kButtons];
+
+void Settings::DefaultButtons()
+{
+	for (int i = 0; i < kButtons; i++)
+		buttons[i] = kDefaultButtons[i];
+}
+
+Settings& Config()
+{
+	static Settings s;
+	return s;
+}
+
+void Settings::Load()
+{
+	// off by default (1.0.1); the host tests turn the default on (orbis_paths.cpp reads the same variable)
+	if (const char* d = getenv("FCEUXS5_LOGS_DEFAULT"))
+		debug_logs = atoi(d) != 0;
+	FILE* f = fopen(IniPath().c_str(), "r");
+	if (!f)
+		return;
+	char line[1024];
+	while (fgets(line, sizeof(line), f))
+	{
+		line[strcspn(line, "\r\n")] = 0;
+		char* eq = strchr(line, '=');
+		if (!eq || line[0] == '#' || line[0] == ';')
+			continue;
+		*eq = 0;
+		const std::string key = line;
+		const char* val = eq + 1;
+		const int n = atoi(val);
+		if (key == "scale")
+			scale = Clamp(n, 0, 2);
+		else if (key == "shader")
+			shader = Clamp(n, 0, kShaderCount - 1);
+		else if (key == "aspect")
+			aspect = Clamp(n, 0, 3);
+		else if (key == "palette")
+			palette = Clamp(n, 0, 63);
+		else if (key == "upscaler")
+			upscaler = Clamp(n, 0, 15);
+		else if (key == "borders")
+			borders = Clamp(n, 0, 2);
+		else if (key == "theme")
+			theme = Clamp(n, 0, 2);
+		else if (key == "theme_chosen")
+			theme_chosen = n != 0;
+		else if (key == "intro")
+			intro = n != 0;
+		else if (key == "music")
+			music = n != 0;
+		else if (key == "music_volume")
+			music_volume = Clamp(n, 0, 100);
+		else if (key == "auto_patch")
+			auto_patch = n != 0;
+		else if (key == "smooth")
+			smooth = n != 0;
+		else if (key == "scanlines")
+			scanlines = n != 0;
+		else if (key == "show_fps")
+			show_fps = n != 0;
+		else if (key == "audio")
+			audio = n != 0;
+		else if (key == "volume")
+			volume = Clamp(n, 0, 100);
+		else if (key == "sound_quality")
+			sound_quality = Clamp(n, 0, 2);
+		else if (key == "lowpass")
+			lowpass = n != 0;
+		else if (key == "ff_speed")
+			ff_speed = n == 0 ? 0 : Clamp(n, 150, 1000);
+		else if (key == "rewind")
+			rewind = n != 0;
+		else if (key == "region")
+			region = Clamp(n, 0, 3);
+		else if (key == "no_sprite_limit")
+			no_sprite_limit = n != 0;
+		else if (key == "ram_state")
+			ram_state = Clamp(n, 0, 2);
+		else if (key == "header_db")
+			header_db = n != 0;
+		else if (key == "turbo")
+			turbo = Clamp(n, 0, 7);
+		else if (key == "four_player")
+			four_player = Clamp(n, 0, 3);
+		else if (key.compare(0, 4, "btn_") == 0)
+		{
+			for (int i = 0; i < kButtons; i++)
+				if (key == kButtonKeys[i])
+					buttons[i] = Clamp(n, 0, kPs5ButtonChoices - 1);
+		}
+		else if (key == "state_slot")
+			state_slot = Clamp(n, 1, 10);
+		else if (key == "covers_download")
+			covers_download = n != 0;
+		else if (key == "debug_logs")
+			debug_logs = n != 0;
+		else if (key == "language")
+			language = Clamp(n, 0, 4);
+		else if (key == "shelf_family")
+			shelf_family = Clamp(n, 0, 64);
+		else if (key == "last_tab")
+			last_tab = Clamp(n, 0, 2);
+		else if (key == "last_rom")
+			last_rom = val;
+	}
+	fclose(f);
+	OrbisLog("[settings] loaded %s", IniPath().c_str());
+}
+
+void Settings::Save() const
+{
+	const std::string tmp = IniPath() + ".tmp";
+	FILE* f = fopen(tmp.c_str(), "w");
+	if (!f)
+	{
+		OrbisLog("[settings] can't write %s", tmp.c_str());
+		return;
+	}
+	fprintf(f, "# fceuxs5\n");
+	fprintf(f, "scale=%d\n", scale);
+	fprintf(f, "shader=%d\n", shader);
+	fprintf(f, "aspect=%d\n", aspect);
+	fprintf(f, "palette=%d\n", palette);
+	fprintf(f, "upscaler=%d\n", upscaler);
+	fprintf(f, "borders=%d\n", borders);
+	fprintf(f, "theme=%d\n", theme);
+	fprintf(f, "theme_chosen=%d\n", theme_chosen ? 1 : 0);
+	fprintf(f, "intro=%d\n", intro ? 1 : 0);
+	fprintf(f, "music=%d\n", music ? 1 : 0);
+	fprintf(f, "music_volume=%d\n", music_volume);
+	fprintf(f, "auto_patch=%d\n", auto_patch ? 1 : 0);
+	fprintf(f, "smooth=%d\n", smooth ? 1 : 0);
+	fprintf(f, "scanlines=%d\n", scanlines ? 1 : 0);
+	fprintf(f, "show_fps=%d\n", show_fps ? 1 : 0);
+	fprintf(f, "audio=%d\n", audio ? 1 : 0);
+	fprintf(f, "volume=%d\n", volume);
+	fprintf(f, "sound_quality=%d\n", sound_quality);
+	fprintf(f, "lowpass=%d\n", lowpass ? 1 : 0);
+	fprintf(f, "ff_speed=%d\n", ff_speed);
+	fprintf(f, "rewind=%d\n", rewind ? 1 : 0);
+	fprintf(f, "region=%d\n", region);
+	fprintf(f, "no_sprite_limit=%d\n", no_sprite_limit ? 1 : 0);
+	fprintf(f, "ram_state=%d\n", ram_state);
+	fprintf(f, "header_db=%d\n", header_db ? 1 : 0);
+	fprintf(f, "turbo=%d\n", turbo);
+	fprintf(f, "four_player=%d\n", four_player);
+	for (int i = 0; i < kButtons; i++)
+		fprintf(f, "%s=%d\n", kButtonKeys[i], buttons[i]);
+	fprintf(f, "state_slot=%d\n", state_slot);
+	fprintf(f, "covers_download=%d\n", covers_download ? 1 : 0);
+	fprintf(f, "debug_logs=%d\n", debug_logs ? 1 : 0);
+	fprintf(f, "language=%d\n", language);
+	fprintf(f, "shelf_family=%d\n", shelf_family);
+	fprintf(f, "last_tab=%d\n", last_tab);
+	fprintf(f, "last_rom=%s\n", last_rom.c_str());
+	bool ok = ferror(f) == 0;
+	ok = fflush(f) == 0 && ok;
+	ok = fsync(fileno(f)) == 0 && ok;
+	ok = fclose(f) == 0 && ok;
+	if (!ok || rename(tmp.c_str(), IniPath().c_str()) != 0)
+	{
+		remove(tmp.c_str());
+		OrbisLog("[settings] can't save %s (disk full?)", IniPath().c_str());
+	}
+}
+} // namespace fe
