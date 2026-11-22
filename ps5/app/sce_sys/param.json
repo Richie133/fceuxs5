@@ -10,7 +10,7 @@
   "conceptId": "51855",
   "contentBadgeType": 1,
   "contentId": "UP9000-PPSA51855_00-FCEUXS5000000001",
-  "contentVersion": "01.000.000",
+  "contentVersion": "01.001.000",
   "downloadDataSize": 256,
   "gameIntent": {
     "permittedIntents": [
@@ -27,7 +27,7 @@
   },
   "masterVersion": "01.00",
   "pubtools": {
-    "creationDate": "2026-11-20 00:00:00",
+    "creationDate": "2026-11-21 00:00:00",
     "loudnessSnd0": "-28.00",
     "toolVersion": "2.00"
   },

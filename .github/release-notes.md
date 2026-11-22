@@ -1,11 +1,8 @@
-First release of **fceuxs5**: the FCEUX NES/Famicom emulator as a native PS5 app.
+**fceuxs5 1.1**
 
-- FCEUX 2.8 core: NES, Famicom, Famicom Disk System (needs `disksys.rom`), VS. System, UNIF, NES 2.0
-- Three interfaces to choose from: **Channel**, **Station** and **Flow** (a 3D cover flow); you pick one at the first start and can change it in Settings
-- An fceuxs5 demo intro at start-up (Cross skips it) and looping menu music
-- Box art downloaded automatically from libretro-thumbnails
-- CRT shaders, plus FCEUX's hq2x, hq3x, Scale2x, Scale3x and Blargg NTSC upscalers
-- ROM hacks: IPS, UPS and BPS patches applied when the game starts; your ROM file isn't changed
-- Save states, rewind, fast forward, turbo, 4 players, button remapping, .zip/.7z, USB and network shares
+- **Settings while you play:** press the **touchpad** in a game and Settings opens over it. Shader changes show live behind the menu. Touch again (or press ○) to go back to the game. You can turn this off in Settings → Controls.
+- **Less flicker in Super Mario Bros. 3 and other busy games:** the NES's 8-sprites-per-line limit is now removed by default, so enemies and items stop blinking out.
+- **New: Flicker reduction (blend frames)** in Settings → Emulation. It mixes each frame with the one before, so games that blink sprites every other frame show them steady.
+- **Select moves to L1.** R1 is now the disk side (Famicom Disk System) or the coin (VS. System). If you're updating from 1.0, your settings move over to the new layout by themselves.
 
-**Install:** unzip `fceuxs5-v1.0-PPSA51855.zip` into `/data/homebrew/`, or send `fceuxs5-v1.0.elf` to your ELF loader (port 9021). Put your games in `/data/fceuxs5/roms/`.
+**Install or update:** in the app, go to Settings → Updates. Or unzip `fceuxs5-v1.1-PPSA51855.zip` into `/data/homebrew/`, or send `fceuxs5-v1.1.elf` to your ELF loader (port 9021).

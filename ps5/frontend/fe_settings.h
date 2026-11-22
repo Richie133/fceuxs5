@@ -27,7 +27,11 @@ struct Settings
 	int ff_speed = 300; // % while R2 is held; 0 = as fast as possible
 	bool rewind = true; // L2 + R2 rewinds
 	int region = 0; // emu::kRegions: auto, NTSC, PAL, Dendy
-	bool no_sprite_limit = false; // the NES shows 8 sprites a line; more flicker less, but isn't what it did
+	// 1.1: on by default -- the NES shows 8 sprites a line and games flicker the rest (SMB3's enemies and items);
+	// FCEUX draws them all
+	bool no_sprite_limit = true;
+	bool frame_blend = false; // 1.1: flicker reduction -- each frame mixed with the one before (30 Hz flicker turns
+	                          // into see-through sprites; motion gets a faint trail)
 	int ram_state = 0; // emu::kRamStates: the RAM at power-on: $FF, $00, random
 	bool header_db = true; // correct headers with Mesen's database (fe_nesdb.h)
 	int state_slot = 1; // 1..10
@@ -38,7 +42,11 @@ struct Settings
 	// A, B, turbo A, turbo B, Start, Select, disk side, disk in/out, coin. By position by default: Circle, Cross,
 	// Triangle, Square, OPTIONS, touchpad, L1, R1, none.
 	static constexpr int kButtons = 9;
-	static constexpr int kDefaultButtons[kButtons] = {1, 0, 3, 2, 6, 7, 4, 5, 8};
+	// 1.1: Select on L1 (the touchpad opens Settings), the disk side and the coin on R1 (a game is a disk or a VS.
+	// System game, never both), the disk in / out unassigned (the next side puts it back by itself)
+	static constexpr int kDefaultButtons[kButtons] = {1, 0, 3, 2, 6, 4, 5, 8, 5};
+	bool touch_menu = true; // 1.1: the touchpad opens Settings over the game
+	int cfg_version = 2;    // 2 = 1.1's defaults (Load moves an older fceuxs5.ini to them)
 	int buttons[kButtons] = {1, 0, 3, 2, 6, 7, 4, 5, 8};
 	void DefaultButtons();
 	// interface (fceuxs5): the launcher's look, chosen at the first start and in Settings

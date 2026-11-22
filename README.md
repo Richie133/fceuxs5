@@ -16,6 +16,8 @@ An NES and Famicom emulator for jailbroken PS5 consoles, built on **[FCEUX](http
 - **CRT filters.** Eleven CRT shaders, ported to the CPU and on by default: CRT Easymode style, crt-lottes, crt-lottes-fast, crt-1tap, crt-2tap, crt-hyllian-fast, crt-nobody, newpixie-mini, crt-blurPi sharp and soft, and monoCRT. They give scanlines, an aperture mask, curvature and glow.
 - **Upscaling.** FCEUX's own filters: hq2x, hq3x, Scale2x, Scale3x, prescale 2x/3x/4x, PAL blend, and Blargg's NTSC filter (composite, S-Video, RGB, monochrome). They combine with the CRT shaders, so NTSC composite + CRT works. You can also choose integer scaling, 8:7, 4:3 or 16:9, and a smooth or sharp picture.
 - **ROM hacks.** IPS, UPS and BPS patches are applied in memory when the game starts, so your ROM file is never changed. Put `Game.ips` (or `.bps` or `.ups`) next to `Game.nes` and it is used automatically. Press □ on a game to choose between several patches or play the original. A patched game keeps its own saves.
+- **Settings while you play:** press the touchpad and Settings opens over the game; shader changes show live behind it.
+- **Less flicker:** the 8-sprites-a-line limit is removed by default (SMB3 and other busy games stop dropping sprites), and *Flicker reduction: blend frames* steadies games that blink sprites every other frame.
 - Save states (10 slots), rewind (L2 + R2), fast forward (R2), turbo buttons, button remapping, 4 players (Four Score and the Famicom adapter), battery saves, `.zip`/`.7z` games, SMB/NFS network shares, and USB drives.
 
 ## Installing
@@ -23,8 +25,8 @@ An NES and Famicom emulator for jailbroken PS5 consoles, built on **[FCEUX](http
 You need a PS5 that can run homebrew (etaHEN or kstuff, with a launcher such as ShadowMountPlus or the ProsperoStore).
 
 - **Easiest:** install it from the ProsperoStore.
-- **By hand:** download `fceuxs5-v1.0-PPSA51855.zip` from [Releases](../../releases). Unzip it to `/data/homebrew/` (or `/mnt/usbX/homebrew/`) so that you have `homebrew/PPSA51855/eboot.bin`. Then register it with your launcher.
-- **Or:** send `fceuxs5-v1.0.elf` to your ELF loader (port 9021). It installs or updates the app and puts the icon on the home screen.
+- **By hand:** download `fceuxs5-v1.1-PPSA51855.zip` from [Releases](../../releases). Unzip it to `/data/homebrew/` (or `/mnt/usbX/homebrew/`) so that you have `homebrew/PPSA51855/eboot.bin`. Then register it with your launcher.
+- **Or:** send `fceuxs5-v1.1.elf` to your ELF loader (port 9021). It installs or updates the app and puts the icon on the home screen.
 
 ## Where things go
 
@@ -42,8 +44,8 @@ No games, BIOS files or box art come with fceuxs5. Use your own dumps.
 | Where | Buttons |
 |---|---|
 | Library | ✕ play · D-pad browse · L1/R1 storage · □ game options (ROM hacks, box art) · △ settings · OPTIONS quit |
-| In game | NES pad on the D-pad, ✕/○ (B/A), □/△ (turbo B/A), OPTIONS = Start, touchpad = Select |
-| Hot keys | L3 + R3 menu · L2 + ↑/↓ save/load state · L2 + ←/→ state slot · R2 fast forward · L2 + R2 rewind |
+| In game | NES pad on the D-pad, ✕/○ (B/A), □/△ (turbo B/A), OPTIONS = Start, L1 = Select, R1 = disk side (FDS) / coin (VS.) |
+| Hot keys | **touchpad: Settings over the game** (touch again or ○ to go back) · L3 + R3 menu · L2 + ↑/↓ save/load state · L2 + ←/→ state slot · R2 fast forward · L2 + R2 rewind |
 
 ## Building
 

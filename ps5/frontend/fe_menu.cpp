@@ -74,6 +74,7 @@ struct Nav
 {
 	bool up = false, down = false, left = false, right = false;
 	bool ok = false, back = false, options = false, menu = false;
+	bool touch = false; // 1.1: the touchpad (Settings opened with it over a game closes with it too)
 };
 
 class NavReader
@@ -99,6 +100,7 @@ public:
 		n.ok = down & SCE_PAD_BUTTON_CROSS;
 		n.back = down & SCE_PAD_BUTTON_CIRCLE;
 		n.options = down & SCE_PAD_BUTTON_OPTIONS;
+		n.touch = down & SCE_PAD_BUTTON_TOUCH_PAD;
 		const uint32_t combo = SCE_PAD_BUTTON_L3 | SCE_PAD_BUTTON_R3;
 		n.menu = (cur & combo) == combo && (down & combo);
 		return n;
@@ -247,9 +249,11 @@ enum SettingRow
 	S_REWIND,
 	S_REGION,
 	S_SPRITES,
+	S_BLEND,
 	S_RAMSTATE,
 	S_HEADERDB,
 	H_CONTROLS,
+	S_TOUCHMENU,
 	S_FOURPLAYER,
 	S_TURBO,
 	S_BTN_FIRST,
@@ -387,10 +391,12 @@ Row SettingRowFor(int s)
 			return {"Fast forward speed (hold R2)", buf};
 		case S_REWIND: return {"Rewind (hold L2 + R2)", OnOff(c.rewind)};
 		case S_REGION: return {"Console region", emu::kRegions[c.region % emu::kRegionCount].name};
-		case S_SPRITES: return {"Remove the sprite limit", OnOff(c.no_sprite_limit)};
+		case S_SPRITES: return {"Remove the sprite limit (less flicker)", OnOff(c.no_sprite_limit)};
+		case S_BLEND: return {"Flicker reduction: blend frames", OnOff(c.frame_blend)};
 		case S_RAMSTATE: return {"RAM at power-on (next start)", emu::kRamStates[c.ram_state % emu::kRamStateCount].name};
 		case S_HEADERDB: return {"Fix headers (Mesen's database; next start)", OnOff(c.header_db)};
 		case H_CONTROLS: return {"CONTROLS (NES pad button  ->  PS5 button)", "", true, true};
+		case S_TOUCHMENU: return {"Touchpad opens Settings in a game", OnOff(c.touch_menu)};
 		case S_FOURPLAYER:
 			// Auto says, over a game, which adapter it gave the game
 			if (c.four_player % emu::kFourPlayerCount == 0 && emu::FourPlayerAuto() >= 0)
@@ -462,6 +468,8 @@ void ChangeSetting(int s, int dir)
 		case S_REWIND: c.rewind = !c.rewind; break;
 		case S_REGION: c.region = Cycle(c.region, dir, emu::kRegionCount); break;
 		case S_SPRITES: c.no_sprite_limit = !c.no_sprite_limit; break;
+		case S_BLEND: c.frame_blend = !c.frame_blend; break;
+		case S_TOUCHMENU: c.touch_menu = !c.touch_menu; break;
 		case S_RAMSTATE: c.ram_state = Cycle(c.ram_state, dir, emu::kRamStateCount); break;
 		case S_HEADERDB: c.header_db = !c.header_db; break;
 		case S_FOURPLAYER: c.four_player = Cycle(c.four_player, dir, emu::kFourPlayerCount); break;
@@ -639,7 +647,7 @@ void SettingsScreen(bool over_game)
 		}
 		else if (sel < S_COUNT && (n.left || n.right || n.ok))
 			ChangeSetting(sel, n.left ? -1 : 1);
-		if (n.back || n.options || n.menu || (n.ok && sel == S_COUNT))
+		if (n.back || n.options || n.menu || (over_game && n.touch) || (n.ok && sel == S_COUNT))
 		{
 			Config().Save();
 			return;
@@ -678,6 +686,11 @@ std::vector<std::string> Wrap(const std::string& text, int scale, int max_px)
 void SettingsMenu()
 {
 	SettingsScreen(false);
+}
+
+void InGameSettings()
+{
+	SettingsScreen(true);
 }
 
 std::string QuitForUpdate()

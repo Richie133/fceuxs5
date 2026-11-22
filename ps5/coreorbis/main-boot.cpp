@@ -126,6 +126,22 @@ bool PlayGame(const std::string& rom, bool from_command_line)
 			case emu::FrameResult::Stopped:
 				emu::CloseGame();
 				return !from_command_line;
+			case emu::FrameResult::OpenSettings:
+			{
+				// the touchpad: Settings over the game; the picture behind shows the shader as it changes
+				FCEUXS5_STAGE(Menu, "settings over the game");
+				emu::Pause();
+				fe::InGameSettings();
+				if (!fe::QuitForUpdate().empty())
+				{
+					emu::CloseGame();
+					return false;
+				}
+				ps5video::FillRect(0, 0, ps5video::kWidth, ps5video::kHeight, ps5video::Rgb(0, 0, 0));
+				ps5video::Present(0, 0, 0, 0, false);
+				emu::Resume();
+				break;
+			}
 			case emu::FrameResult::OpenMenu:
 			{
 				FCEUXS5_STAGE(Menu, "pause menu");

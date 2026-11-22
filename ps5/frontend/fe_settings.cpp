@@ -53,6 +53,7 @@ void Settings::Load()
 	FILE* f = fopen(IniPath().c_str(), "r");
 	if (!f)
 		return;
+	int file_version = 0;
 	char line[1024];
 	while (fgets(line, sizeof(line), f))
 	{
@@ -110,6 +111,12 @@ void Settings::Load()
 			region = Clamp(n, 0, 3);
 		else if (key == "no_sprite_limit")
 			no_sprite_limit = n != 0;
+		else if (key == "frame_blend")
+			frame_blend = n != 0;
+		else if (key == "touch_menu")
+			touch_menu = n != 0;
+		else if (key == "cfg_version")
+			file_version = n;
 		else if (key == "ram_state")
 			ram_state = Clamp(n, 0, 2);
 		else if (key == "header_db")
@@ -140,6 +147,22 @@ void Settings::Load()
 			last_rom = val;
 	}
 	fclose(f);
+	if (file_version < 2)
+	{
+		// from 1.0: the sprite limit off (SMB3's flicker), the touchpad freed for Settings -- Select and the disk
+		// buttons move to 1.1's defaults unless the player had moved them already
+		no_sprite_limit = true;
+		if (buttons[5] == 7)
+			buttons[5] = 4;
+		if (buttons[6] == 4)
+			buttons[6] = 5;
+		if (buttons[7] == 5)
+			buttons[7] = 8;
+		if (buttons[8] == 8)
+			buttons[8] = 5;
+		cfg_version = 2;
+		Save();
+	}
 	OrbisLog("[settings] loaded %s", IniPath().c_str());
 }
 
@@ -176,6 +199,9 @@ void Settings::Save() const
 	fprintf(f, "rewind=%d\n", rewind ? 1 : 0);
 	fprintf(f, "region=%d\n", region);
 	fprintf(f, "no_sprite_limit=%d\n", no_sprite_limit ? 1 : 0);
+	fprintf(f, "frame_blend=%d\n", frame_blend ? 1 : 0);
+	fprintf(f, "touch_menu=%d\n", touch_menu ? 1 : 0);
+	fprintf(f, "cfg_version=%d\n", cfg_version);
 	fprintf(f, "ram_state=%d\n", ram_state);
 	fprintf(f, "header_db=%d\n", header_db ? 1 : 0);
 	fprintf(f, "turbo=%d\n", turbo);

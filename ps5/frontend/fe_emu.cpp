@@ -171,10 +171,10 @@ const ConsoleButton kConsoleButtons[kConsoleButtonCount] = {
 	{"Turbo A", "btn_turbo_a", 0x100, 3},
 	{"Turbo B", "btn_turbo_b", 0x200, 2},
 	{"Start", "btn_start", fceuxs5::kStart, 6},
-	{"Select", "btn_select", fceuxs5::kSelect, 7},
-	{"Disk: next side (FDS)", "btn_disk_side", -1, 4},
-	{"Disk: in / out (FDS)", "btn_disk_insert", -1, 5},
-	{"Insert coin (VS. System)", "btn_coin", -1, 8},
+	{"Select", "btn_select", fceuxs5::kSelect, 4},
+	{"Disk: next side (FDS)", "btn_disk_side", -1, 5},
+	{"Disk: in / out (FDS)", "btn_disk_insert", -1, 8},
+	{"Insert coin (VS. System)", "btn_coin", -1, 5},
 };
 } // namespace emu
 
@@ -280,6 +280,7 @@ struct State
 	int xscale = 1, yscale = 1;
 	bool filter_ntsc = false, filter_pal = false;
 	std::vector<uint32_t> frame, crt_frame;
+	std::vector<uint32_t> blend_prev; // flicker reduction: the last frame as FCEUX drew it
 	int fw = 0, fh = 0;         // the filtered frame
 	int nes_w = 256, nes_h = 224; // the console's picture it shows (before the filter)
 	bool new_frame = false;
@@ -403,6 +404,23 @@ void ConvertFrame(uint8* xbuf)
 	g.nes_w = bw;
 	g.nes_h = lines;
 	Blit8ToHigh(xbuf + first * 256 + side, reinterpret_cast<uint8*>(g.frame.data()), bw, lines, w * 4, g.xscale, g.yscale);
+	// flicker reduction: the frame mixed half and half with the previous one, so a sprite a game shows every other
+	// frame (SMB3 with many objects on a line) is steady and see-through instead of blinking at 30 Hz
+	if (fe::Config().frame_blend)
+	{
+		if (g.blend_prev.size() != g.frame.size())
+			g.blend_prev = g.frame;
+		uint32_t* cur = g.frame.data();
+		uint32_t* prev = g.blend_prev.data();
+		for (size_t i = 0, n = g.frame.size(); i < n; i++)
+		{
+			const uint32_t a = cur[i], b = prev[i];
+			prev[i] = a;
+			cur[i] = ((a & 0xfefefeu) >> 1) + ((b & 0xfefefeu) >> 1) + (a & b & 0x010101u);
+		}
+	}
+	else if (!g.blend_prev.empty())
+		std::vector<uint32_t>().swap(g.blend_prev);
 	g.new_frame = true;
 }
 
@@ -562,7 +580,9 @@ uint32_t PadBits(int player, bool dpad_off)
 	for (int i = 0; i < emu::kConsoleButtonCount; i++)
 	{
 		const int b = cfg.buttons[i];
-		const unsigned bit = b >= 0 && b < emu::kPs5ButtonCount ? emu::kPs5Buttons[b].bit : 0;
+		unsigned bit = b >= 0 && b < emu::kPs5ButtonCount ? emu::kPs5Buttons[b].bit : 0;
+		if (bit == SCE_PAD_BUTTON_TOUCH_PAD && cfg.touch_menu)
+			bit = 0; // the touchpad opens Settings
 		const int nes = emu::kConsoleButtons[i].nes_bit;
 		if (bit && (p.raw_buttons & bit) && nes > 0)
 			bits |= uint32_t(nes);
@@ -914,6 +934,7 @@ bool LoadGame(const std::string& path, std::string* error)
 	OrbisLog("[emu] loading %s%s%s as %s", path.c_str(), inner.empty() ? "" : " -> ", inner.c_str(), g.tmp_path.c_str());
 	ApplySettings();
 	g.frame.clear();
+	g.blend_prev.clear();
 	g.fw = g.fh = 0;
 	g.in.clear();
 	g.mute = false;
@@ -958,6 +979,8 @@ bool LoadGame(const std::string& path, std::string* error)
 	netfs_set_realtime(true);
 	if (!g.patch.empty())
 		Osd(g.patch_note.empty() ? Fmt(fe::T("ROM hack: %s"), fe::PatchLabel(g.patch).c_str()) : g.patch_note);
+	else if (fe::Config().touch_menu)
+		Osd(fe::T("Touchpad: Settings     L3 + R3: Menu"));
 	OrbisLog("[emu] running \"%s\" (%s), %.3f fps, mapper %d", g.name.c_str(), SystemName().c_str(), g.fps,
 		GameInfo ? int(GameInfo->type) : -1);
 	return true;
@@ -1142,6 +1165,8 @@ FrameResult RunFrame()
 	const uint32_t menu_combo = SCE_PAD_BUTTON_L3 | SCE_PAD_BUTTON_R3;
 	if ((raw & menu_combo) == menu_combo && (pressed & menu_combo))
 		return FrameResult::OpenMenu;
+	if (cfg.touch_menu && !g.wait_release && (pressed & SCE_PAD_BUTTON_TOUCH_PAD))
+		return FrameResult::OpenSettings;
 
 	const bool l2 = (raw & SCE_PAD_BUTTON_L2) != 0;
 	const bool r2 = (raw & SCE_PAD_BUTTON_R2) != 0;
@@ -1164,7 +1189,9 @@ FrameResult RunFrame()
 		for (int i = 0; i < kConsoleButtonCount; i++)
 		{
 			const int b = cfg.buttons[i];
-			const unsigned bit = b >= 0 && b < kPs5ButtonCount ? kPs5Buttons[b].bit : 0;
+			unsigned bit = b >= 0 && b < kPs5ButtonCount ? kPs5Buttons[b].bit : 0;
+			if (bit == SCE_PAD_BUTTON_TOUCH_PAD && cfg.touch_menu)
+				bit = 0;
 			if (kConsoleButtons[i].nes_bit < 0 && bit && (raw & bit))
 				extra |= 1u << i;
 		}

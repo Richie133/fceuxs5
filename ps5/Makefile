@@ -25,7 +25,7 @@
 PS5_PAYLOAD_SDK ?= /opt/ps5-payload-sdk
 PS5_HOST ?= ps5
 PS5_PORT ?= 9021
-VERSION ?= 1.0
+VERSION ?= 1.1
 # the FCEUX this port is built from (TASEmulators/fceux master, 0f7c216, November 2026)
 CORE_VERSION := 2.8.0
 TITLE_ID ?= PPSA51855

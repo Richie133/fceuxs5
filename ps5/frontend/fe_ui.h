@@ -35,6 +35,7 @@ struct Nav
 	bool pgup = false, pgdn = false;
 	bool ok = false, back = false, options = false, triangle = false, menu = false;
 	bool square = false, l2 = false, r2 = false;
+	bool touch = false; // 1.1: the touchpad (closes Settings opened with it over a game)
 };
 
 class NavReader

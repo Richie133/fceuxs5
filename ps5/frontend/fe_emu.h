@@ -97,12 +97,14 @@ const char* FourPlayerName(int adapter);
 enum class FrameResult
 {
 	Continue,
-	OpenMenu, // L3 + R3 pressed together (or the touchpad held)
+	OpenMenu,     // L3 + R3 pressed together: the pause menu
+	OpenSettings, // the touchpad (Settings > Touchpad opens Settings): Settings over the game
 	Stopped,  // no game
 };
 // One frame: the pads and hot keys, FCEUI_Emulate(), the picture (and the messages) on the screen, the sound to the
 // audio ring, paced by the display (60 Hz games) or by the sound (50 Hz games). Hot keys: L2 + Up / Down = save /
-// load the state slot, L2 + Left / Right = change the slot, R2 held = fast forward, L2 + R2 held = rewind.
+// load the state slot, L2 + Left / Right = change the slot, R2 held = fast forward, L2 + R2 held = rewind,
+// the touchpad = Settings.
 FrameResult RunFrame();
 
 void Pause(); // nothing runs between frames; kept for the menus' symmetry

@@ -57,6 +57,7 @@ Nav NavReader::Read()
 	n.options = down & SCE_PAD_BUTTON_OPTIONS;
 	n.triangle = down & SCE_PAD_BUTTON_TRIANGLE;
 	n.square = down & SCE_PAD_BUTTON_SQUARE;
+	n.touch = down & SCE_PAD_BUTTON_TOUCH_PAD;
 	n.l2 = down & SCE_PAD_BUTTON_L2;
 	n.r2 = down & SCE_PAD_BUTTON_R2;
 	const uint32_t combo = SCE_PAD_BUTTON_L3 | SCE_PAD_BUTTON_R3; // the pause menu's buttons, as fe_menu.cpp reads them
